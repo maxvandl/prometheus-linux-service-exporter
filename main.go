@@ -21,9 +21,9 @@ func checkXrdpStatus() {
 	cmd := exec.Command("systemctl", "is-active", "--quiet", "xrdp")
 	err := cmd.Run()
 	if err == nil {
-		xrdpStatus.Set(1) // Service is running
-	} else {
 		xrdpStatus.Set(0) // Service is not running
+	} else {
+		xrdpStatus.Set(1) // Service is running
 	}
 }
 
