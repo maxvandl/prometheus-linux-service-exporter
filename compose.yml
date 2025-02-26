@@ -1,0 +1,9 @@
+services:
+  xrdp_monitor:
+    build: .
+    container_name: xrdp_prometheus_agent
+    restart: always
+    ports:
+      - "8888:8888"
+    environment:
+      - TZ=UTC  # Set timezone if needed
