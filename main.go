@@ -18,14 +18,22 @@ var serviceMetrics = make(map[string]prometheus.Gauge)
 
 // Функция для загрузки переменных окружения из .env
 func loadEnv() []string {
-	err := godotenv.Load(".env") // Загружаем файл .env
+	// Загружаем файл .env
+	if err := godotenv.Load(".env"); err != nil {
+		log.Println("Не удалось загрузить .env")
+		return nil
+	}
 
-
-	services := os.Getenv("SERVICES") // Получаем список сервисов
-
+	// Получаем список сервисов из переменной окружения
+	services := os.Getenv("SERVICES")
+	if services == "" {
+		log.Println("Переменная SERVICES не задана")
+		return nil
+	}
 
 	return strings.Split(services, ",") // Разбиваем строку в массив
 }
+
 
 // Функция для проверки статуса сервиса
 func checkServiceStatus(service string) {
