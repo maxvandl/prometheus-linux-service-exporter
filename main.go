@@ -13,43 +13,43 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Map для хранения метрик сервисов
+// serviceMetrics stores Prometheus gauges for each monitored service
 var serviceMetrics = make(map[string]prometheus.Gauge)
 
-// Функция для загрузки переменных окружения из .env
-func loadEnv() []string {
-	// Загружаем файл .env
+// loadServicesFromEnv loads the list of services from the .env file
+func loadServicesFromEnv() []string {
+	// Load .env file
 	if err := godotenv.Load(".env"); err != nil {
-		log.Println("Не удалось загрузить .env")
+		log.Println("Failed to load .env file")
 		return nil
 	}
 
-	// Получаем список сервисов из переменной окружения
+	// Get the list of services from the environment variable
 	services := os.Getenv("SERVICES")
 	if services == "" {
-		log.Println("Переменная SERVICES не задана")
+		log.Println("SERVICES environment variable is not set")
 		return nil
 	}
 
-	return strings.Split(services, ",") // Разбиваем строку в массив
+	return strings.Split(services, ",") // Split the string into an array
 }
 
-
-// Функция для проверки статуса сервиса
+// checkServiceStatus checks if a service is running and updates its metric
 func checkServiceStatus(service string) {
 	cmd := exec.Command("pgrep", "-x", service)
 	err := cmd.Run()
+	
 	if err == nil {
-		log.Printf("%s is running\n", service)
+		log.Printf("%s is running", service)
 		serviceMetrics[service].Set(1)
 	} else {
-		log.Printf("%s is stopped\n", service)
+		log.Printf("%s is stopped", service)
 		serviceMetrics[service].Set(0)
 	}
 }
 
-// Мониторинг всех сервисов
-func startMonitoring(services []string) {
+// monitorServices periodically checks the status of all services
+func monitorServices(services []string) {
 	for {
 		for _, service := range services {
 			checkServiceStatus(service)
@@ -59,10 +59,13 @@ func startMonitoring(services []string) {
 }
 
 func main() {
-	// Загружаем список сервисов из .env
-	services := loadEnv()
-
-	// Регистрируем метрики для каждого сервиса
+	// Load the list of services from .env
+	services := loadServicesFromEnv()
+	if services == nil || len(services) == 0 {
+		log.Fatal("No services to monitor")
+	}
+	
+	// Register metrics for each service
 	for _, service := range services {
 		metric := prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "service_status_" + service,
@@ -72,11 +75,11 @@ func main() {
 		serviceMetrics[service] = metric
 	}
 
-	// Запускаем мониторинг в отдельной горутине
-	go startMonitoring(services)
+	// Start monitoring in a separate goroutine
+	go monitorServices(services)
 
-	// Запускаем HTTP-сервер для Prometheus
+	// Start HTTP server for Prometheus metrics
 	http.Handle("/metrics", promhttp.Handler())
-	log.Println("Starting Prometheus service monitoring agent on :8888")
+	log.Printf("Starting Prometheus service monitoring agent on :8888, monitoring services: %s", strings.Join(services, ", "))
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }
