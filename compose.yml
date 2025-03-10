@@ -7,9 +7,10 @@ services:
     ports:
       - 8888:8888
     environment:
-      - SERVICES=service1,service2,service3
+      - SERVICES=sshd,ejabberd
       - TZ=UTC # Set timezone if needed
     pid: "host" # Gives the container access to the host's process namespace
     volumes:
       - /run/systemd:/run/systemd:ro # Required for systemd
       - /proc/1/ns:/host_ns:ro # Gives access to the host's namespaces
+      - ./.env:/app/.env
