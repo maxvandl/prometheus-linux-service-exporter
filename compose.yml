@@ -2,12 +2,12 @@
 services:
   xrdp_monitor:
     build: .
-    container_name: xrdp_prometheus_agent
+    container_name: servicemonitor_prometheus_agent
     restart: always
     ports:
       - 8888:8888
     environment:
-      - SERVICES=ejabberd,nginx,sshd
+      - SERVICES=${SERVICES}
       - TZ=UTC # Set timezone if needed
     pid: "host" # Gives the container access to the host's process namespace
     volumes:

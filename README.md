@@ -67,6 +67,42 @@ scrape_configs:
       - targets: ["localhost:8888"]
 ```
 
+Alertmanager Integration
+
+```yaml
+groups:
+- name: service_status
+  rules:
+  - alert: ServiceDown
+    expr: service_status_.*{} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Service {{ $labels.job }} is down"
+      description: "The {{ $labels.__name__ }} service has been detected as not running for more than 1 minute."
+      service_name: "{{ $labels.__name__ | regexp_replace 'service_status_(.*)' '$1' }}"
+  
+  - alert: CriticalServiceDown
+    expr: service_status_(ejabberd|nginx|postgres|redis){} == 0
+    for: 30s
+    labels:
+      severity: critical
+      priority: high
+    annotations:
+      summary: "Critical service down: {{ $labels.__name__ | regexp_replace 'service_status_(.*)' '$1' }}"
+      description: "Critical service {{ $labels.__name__ | regexp_replace 'service_status_(.*)' '$1' }} is not running."
+  
+  - alert: ServiceStatusNotReporting
+    expr: absent(service_status_.*)
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Service status metrics not reporting"
+      description: "No service status metrics are being reported. The monitoring service may be down."
+```
+
 Restart Prometheus for the changes to take effect.
 
 Metrics Example
