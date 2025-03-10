@@ -18,20 +18,17 @@ var serviceMetrics = make(map[string]prometheus.Gauge)
 
 // loadServicesFromEnv loads the list of services from the .env file
 func loadServicesFromEnv() []string {
-	// Load .env file
-	if err := godotenv.Load(".env"); err != nil {
-		log.Println("Failed to load .env file")
-		return nil
-	}
-
-	// Get the list of services from the environment variable
-	services := os.Getenv("SERVICES")
-	if services == "" {
-		log.Println("SERVICES environment variable is not set")
-		return nil
-	}
-
-	return strings.Split(services, ",") // Split the string into an array
+    // Try to load .env file, but don't fail if it doesn't exist
+    _ = godotenv.Load(".env")
+    
+    // Get the list of services from the environment variable
+    services := os.Getenv("SERVICES")
+    if services == "" {
+        log.Println("SERVICES environment variable is not set")
+        return nil
+    }
+    
+    return strings.Split(services, ",")
 }
 
 // checkServiceStatus checks if a service is running and updates its metric
