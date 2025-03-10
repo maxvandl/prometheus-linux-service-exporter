@@ -10,3 +10,4 @@ services:
       - TZ=UTC # Set timezone if needed
     env_file:
       - ./.env
+    pid: "host"
