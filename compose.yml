@@ -1,4 +1,5 @@
----
+version: "3.8"
+
 services:
   xrdp_monitor:
     build: .
@@ -10,4 +11,7 @@ services:
       - TZ=UTC # Set timezone if needed
     env_file:
       - ./.env
-    pid: "host"
+    pid: "host" # Gives the container access to the host's process namespace
+    volumes:
+      - /run/systemd:/run/systemd:ro # Required for systemd
+      - /proc/1/ns:/host_ns:ro # Gives access to the host's namespaces

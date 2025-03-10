@@ -16,14 +16,16 @@ import (
 // Карта метрик для каждого сервиса
 var serviceMetrics = make(map[string]prometheus.Gauge)
 
-// Функция для проверки состояния сервиса
+// Функция для проверки состояния сервиса на хосте
 func checkServiceStatus(service string) {
-	cmd := exec.Command("systemctl", "is-active", "--quiet", service)
+	cmd := exec.Command("nsenter", "--target", "1", "--mount", "--pid", "--systemd", "systemctl", "is-active", "--quiet", service)
 	err := cmd.Run()
 	if err == nil {
 		serviceMetrics[service].Set(1) // Сервис работает
+		log.Printf("[OK] %s is running\n", service)
 	} else {
 		serviceMetrics[service].Set(0) // Сервис остановлен
+		log.Printf("[ERROR] %s is NOT running\n", service)
 	}
 }
 
