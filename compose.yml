@@ -7,7 +7,7 @@ services:
     ports:
       - 8888:8888
     environment:
-      - SERVICES=sshd,ejabberd
+      - SERVICES=sshd,ejabberd,nginx
       - TZ=UTC # Set timezone if needed
     pid: "host" # Gives the container access to the host's process namespace
     volumes:
