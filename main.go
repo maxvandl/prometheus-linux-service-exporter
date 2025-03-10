@@ -33,7 +33,7 @@ func loadServicesFromEnv() []string {
 
 // checkServiceStatus checks if a service is running and updates its metric
 func checkServiceStatus(service string) {
-	cmd := exec.Command("pgrep", "-x", service)
+	cmd := exec.Command("pgrep", "-f", service)
 	err := cmd.Run()
 	
 	if err == nil {
