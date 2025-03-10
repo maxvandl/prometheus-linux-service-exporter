@@ -3,46 +3,66 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
+	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Define a Prometheus gauge metric
-var xrdpStatus = prometheus.NewGauge(prometheus.GaugeOpts{
-	Name: "xrdp_service_status",
-	Help: "Current status of the xrdp service (1 = running, 0 = stopped)",
-})
+// Карта метрик для каждого сервиса
+var serviceMetrics = make(map[string]prometheus.Gauge)
 
-// Function to check if xrdp is running
-func checkXrdpStatus() {
-	cmd := exec.Command("systemctl", "is-active", "--quiet", "xrdp")
+// Функция для проверки состояния сервиса
+func checkServiceStatus(service string) {
+	cmd := exec.Command("systemctl", "is-active", "--quiet", service)
 	err := cmd.Run()
 	if err == nil {
-		xrdpStatus.Set(0) // Service is not running
+		serviceMetrics[service].Set(1) // Сервис работает
 	} else {
-		xrdpStatus.Set(1) // Service is running
+		serviceMetrics[service].Set(0) // Сервис остановлен
 	}
 }
 
-func startMonitoring() {
+// Запуск мониторинга в цикле
+func startMonitoring(services []string) {
 	for {
-		checkXrdpStatus()
-		time.Sleep(10 * time.Second) // Adjust the interval as needed
+		for _, service := range services {
+			checkServiceStatus(service)
+		}
+		time.Sleep(10 * time.Second) // Интервал обновления метрик
 	}
 }
 
 func main() {
-	// Register metric
-	prometheus.MustRegister(xrdpStatus)
+	// Загружаем переменные из .env (если файл есть)
+	_ = godotenv.Load()
 
-	// Start monitoring in a goroutine
-	go startMonitoring()
+	// Получаем список сервисов из переменной окружения
+	servicesStr := os.Getenv("SERVICES")
+	if servicesStr == "" {
+		log.Fatal("SERVICES environment variable is not set")
+	}
+	services := strings.Split(servicesStr, ",")
 
-	// Expose metrics endpoint
+	// Регистрация метрик для каждого сервиса
+	for _, service := range services {
+		service = strings.TrimSpace(service) // Убираем лишние пробелы
+		serviceMetrics[service] = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "service_status_" + service,
+			Help: "Current status of the " + service + " service (1 = running, 0 = stopped)",
+		})
+		prometheus.MustRegister(serviceMetrics[service])
+	}
+
+	// Запуск мониторинга в отдельной горутине
+	go startMonitoring(services)
+
+	// Экспорт метрик
 	http.Handle("/metrics", promhttp.Handler())
-	log.Println("Starting Prometheus xrdp monitoring agent on :8888")
+	log.Println("Starting Prometheus monitoring agent on :8888")
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }

@@ -13,4 +13,5 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	google.golang.org/protobuf v1.36.1 // indirect
+	github.com/joho/godotenv v1.5.1
 )
