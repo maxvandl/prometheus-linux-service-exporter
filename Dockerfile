@@ -15,7 +15,7 @@ COPY . .
 RUN go build -o xrdp_monitor
 
 # Create a minimal runtime image
-FROM ubuntu:24.04
+FROM ubuntu:25.10
 
 # Set the working directory inside the runtime container
 WORKDIR /app
