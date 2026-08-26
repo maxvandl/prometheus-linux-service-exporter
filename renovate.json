@@ -7,16 +7,27 @@
   "baseBranches": [
     "main"
   ],
+
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 0,
+  "branchConcurrentLimit": 0,
+  "schedule": ["at any time"],
+  "prCreation": "immediate",
+
+  "automerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "platformAutomerge": true,
+
   "packageRules": [
     {
-      "matchPackageNames": [
-        "*"
-      ],
-      "automerge": false,
-      "schedule": [
-        "on monday"
-      ]
+      "matchPackageNames": ["*"],
+      "matchUpdateTypes": ["major", "minor", "patch", "pin", "digest"],
+      "automerge": true
     }
   ],
-  "separateMajorMinor": true
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true
+  }
 }
